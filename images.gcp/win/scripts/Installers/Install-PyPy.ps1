@@ -80,26 +80,12 @@ function Install-PyPy
 $toolsetVersions = Get-ToolsetContent | Select-Object -ExpandProperty toolcache | Where-Object Name -eq "PyPy"
 
 # Get PyPy releases
-$pypyVersions = Invoke-RestMethod https://downloads.python.org/pypy/versions.json
+# $pypyVersions = Invoke-RestMethod https://downloads.python.org/pypy/versions.json
 
 Write-Host "Starting installation PyPy..."
 foreach($toolsetVersion in $toolsetVersions.versions)
 {
-    # Query latest PyPy version
-    $latestMajorPyPyVersion = $pypyVersions |
-        Where-Object {$_.python_version.StartsWith("$toolsetVersion") -and $_.stable -eq $true} |
-        Select-Object -ExpandProperty files -First 1 |
-        Where-Object platform -like "win*"
-    
-    if ($latestMajorPyPyVersion)
-    {
-        Write-Host "Found PyPy '$($latestMajorPyPyVersion.filename)' package"
-        $tempPyPyPackagePath = Start-DownloadWithRetry -Url $latestMajorPyPyVersion.download_url -Name $latestMajorPyPyVersion.filename
-        Install-PyPy -PackagePath $tempPyPyPackagePath -Architecture $toolsetVersions.arch
-    }
-    else
-    {
-        Write-Host "Failed to query PyPy version '$toolsetVersion'"
-        exit 1
-    }
+    Write-Host "Found PyPy '$($latestMajorPyPyVersion.filename)' package"
+    $tempPyPyPackagePath = Start-DownloadWithRetry -Url "https://downloads.python.org/pypy/pypy$toolsetVersion-v7.3.9-win64.zip" -Name "pypy$toolsetVersion-v7.3.9-win64.zip"
+    Install-PyPy -PackagePath $tempPyPyPackagePath -Architecture $toolsetVersions.arch
 }

@@ -18,7 +18,13 @@ $rustupPath = Start-DownloadWithRetry -Url "https://win.rustup.rs/x86_64" -Name 
 Add-DefaultPathItem "%USERPROFILE%\.cargo\bin"
 # Add Rust binaries to the path
 $env:Path += ";$env:CARGO_HOME\bin"
+# Add rust to path
+Add-MachinePathItem "%USERPROFILE%\.cargo\bin"
 
+# Set nightly as default
+rustup default nightly
+rustup update
+rustup target add x86_64-pc-windows-msvc
 # Add i686 target for building 32-bit binaries
 rustup target add i686-pc-windows-msvc
 

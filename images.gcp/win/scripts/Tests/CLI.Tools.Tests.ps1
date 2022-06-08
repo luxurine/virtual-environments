@@ -54,3 +54,9 @@ Describe "Hub CLI" {
         "hub --version" | Should -ReturnZeroExitCode
     }
 }
+
+Describe "FLUTTER" {
+    It "flutter sdk is installed" {
+        "flutter --version" | Should -ReturnZeroExitCode
+    }
+}

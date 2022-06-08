@@ -1,0 +1,106 @@
+{
+    "variables": {
+        "image_folder": "C:\\image",
+        "imagedata_file": "C:\\imagedata.json",
+        "helper_script_folder": "C:\\Program Files\\WindowsPowerShell\\Modules\\",
+        "agent_tools_directory": "C:\\hostedtoolcache\\windows",
+        "install_user": "installer",
+        "install_password": "WyVhd2rQDQEnJd",
+        "image_version": "dev",
+        "image_os": "win19"
+    },
+    "sensitive-variables": [
+        "install_password"
+    ],
+    "builders": [
+        {
+            "type": "googlecompute",
+            "project_id": "taptap-dev-rnd",
+            "network": "taptap-dev",
+            "subnetwork": "taptap-dev-shared-as-ea2-1",
+            "source_image": "windows-server-2019-dc-v20220513",
+            "source_image_family": "windows-2019",
+            "disk_size": "200",
+            "machine_type": "e2-medium",
+            "communicator": "winrm",
+            "winrm_username": "gitlab_runner",
+            "winrm_insecure": true,
+            "winrm_use_ssl": true,
+            "metadata": {
+                "windows-startup-script-cmd": "winrm quickconfig -quiet & net user /add packer_user & net localgroup administrators packer_user /add & winrm set winrm/config/service/auth @{Basic=\"true\"}"
+            },
+            "zone": "asia-east2-a",
+            "image_name": "windows-server-2019-dc-v20220513-runner-test03",
+            "image_description": "image for windows server based gitlab runner instance",
+            "image_family": "runner-base",
+            "state_timeout": "24h"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "powershell",
+            "inline": [
+                "New-Item -Path {{user `image_folder`}} -ItemType Directory -Force"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "{{ template_dir }}/scripts/ImageHelpers",
+            "destination": "{{user `helper_script_folder`}}"
+        },
+        {
+            "type": "file",
+            "source": "{{ template_dir }}/scripts/SoftwareReport",
+            "destination": "{{user `image_folder`}}"
+        },
+        {
+            "type": "file",
+            "source": "{{ template_dir }}/post-generation",
+            "destination": "C:/"
+        },
+        {
+            "type": "file",
+            "source": "{{ template_dir }}/scripts/Tests",
+            "destination": "{{user `image_folder`}}"
+        },
+        {
+            "type": "file",
+            "source": "{{template_dir}}/toolsets/toolset-2019.json",
+            "destination": "{{user `image_folder`}}\\toolset.json"
+        },
+        {
+            "type": "windows-shell",
+            "inline": [
+                "net user {{user `install_user`}} {{user `install_password`}} /add /passwordchg:no /passwordreq:yes /active:yes /Y",
+                "net localgroup Administrators {{user `install_user`}} /add",
+                "winrm set winrm/config/service/auth @{Basic=\"true\"}",
+                "winrm get winrm/config/service/auth"
+            ]
+        },
+        {
+            "type": "powershell",
+            "inline": [
+                "if (-not ((net localgroup Administrators) -contains '{{user `install_user`}}')) { exit 1 }"
+            ]
+        },
+        {
+            "type": "powershell",
+            "inline": [
+                "bcdedit.exe /set TESTSIGNING ON"
+            ],
+            "elevated_user": "{{user `install_user`}}",
+            "elevated_password": "{{user `install_password`}}"
+        },
+        {
+            "type": "powershell",
+            "skip_clean": true,
+            "scripts": [
+                "{{ template_dir }}/scripts/Installers/Finalize-VM.ps1"
+            ]
+        },
+        {
+            "type": "windows-restart",
+            "restart_timeout": "10m"
+        }
+    ]
+}

@@ -16,8 +16,8 @@ C:\msys64\usr\bin\bash.exe -leo pipefail %*
 New-Item -ItemType SymbolicLink -Path "$shellPath\gitbash.exe" -Target "$env:ProgramFiles\Git\bin\bash.exe" | Out-Null
 
 # WSL is available on Windows Server 2019 and Windows Server 2022
-if (-not (Test-IsWin16))
-{
-    # wslbash <--> C:\Windows\System32\bash.exe
-    New-Item -ItemType SymbolicLink -Path "$shellPath\wslbash.exe" -Target "$env:SystemRoot\System32\bash.exe" | Out-Null
-}
+# if (-not (Test-IsWin16))
+# {
+#     # wslbash <--> C:\Windows\System32\bash.exe
+#     New-Item -ItemType SymbolicLink -Path "$shellPath\wslbash.exe" -Target "$env:SystemRoot\System32\bash.exe" | Out-Null
+# }
